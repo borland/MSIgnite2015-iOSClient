@@ -1,10 +1,22 @@
+// Copyright (c) 2015 Orion Edwards
 //
-//  ApiInterface.swift
-//  MSIgnite2015
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
 //
-//  Created by Orion Edwards on 2/09/15.
-//  Copyright © 2015 Orion Edwards. All rights reserved.
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
 //
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
 import Foundation
 
@@ -151,16 +163,16 @@ class ApiInterface {
     }
 }
 
-class Speaker {
+struct Speaker {
     //{"Id":"0aVRnK0oxZF9up88dVfOpg%3D%3D","Name":"Alan Burchill","LastName":"B","FirstName":"Alan","IsMVP":false,"IsMicrosoftStaff":false
 //    ,"PhotoPath":"","Twitterusername":"@alanburchill","LinkedInUrl":"","Website":null,"Bio":"Microsoft MVP
   //  in Group Policy and Author of the grouppolicy.biz web site.","Organisation":"Avanade Australia"}
     
-    var id = ""
-    var name = ""
-    var photoPath = ""
-    var twitterUsername = ""
-    var bio = ""
+    let id:String
+    let name:String
+    let photoPath:String
+    let twitterUsername = ""
+    let bio:String
     
     init(dictionary:[String:AnyObject]) {
         id = dictionary["Id"] as? String ?? ""
@@ -170,35 +182,38 @@ class Speaker {
     }
 }
 
-class Schedule {
+struct Schedule {
 /* {
 "StartDatetime":"2015-09-03T09:00:00", "EndDatetime":"2015-09-03T10:00:00", "Venue":"New Zealand 1 (SKYCITY)","EventSessionRegistrationId":0,"Status":"Scheduled","IsToday":false,"FormattedVenueString":"New Zealand 1 (SKYCITY)","FormattedStartDate":"Thu 3 Sept,  9:00 a.m."}, */
-    var startDateTime = NSDate() // not using this so why bother parsing
-    var endDateTime = ""  // not using this so why bother parsing
-    var venue = ""
-    var eventSessionRegistrationId = 0
-    var status = ""
-    var isToday = false
-    var formattedVenueString = ""
-    var formattedStartDate = ""
-    
-    required init () { }
+    let startDateTime:NSDate
+    let endDateTime = NSDate()  // not using this so why bother parsing
+    let venue:String
+    let eventSessionRegistrationId:Int
+    let status:String
+    let isToday = false
+    let formattedVenueString:String
+    let formattedStartDate:String
+
     
     static let formatter = NSDateFormatter()
     static var onceToken:dispatch_once_t = 0
     
-    class func parseDate(dateString:String) -> NSDate? {
+    static func parseDate(dateString:String) -> NSDate? {
         dispatch_once(&onceToken) {
             formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
         }
         return formatter.dateFromString(dateString)
     }
     
+    init () {
+        self.init(dictionary:[String:AnyObject]())
+    }
+    
     init(dictionary:[String:AnyObject]) {
         if let x = dictionary["StartDatetime"] as? String, let y = Schedule.parseDate(x) {
             startDateTime = y
         } else {
-            assertionFailure("can't parse date!")
+            startDateTime = NSDate(timeIntervalSince1970: 0)
         }
         venue = dictionary["Venue"] as? String ?? ""
         eventSessionRegistrationId = dictionary["EventSessionRegistrationId"] as? Int ?? 0
@@ -208,16 +223,18 @@ class Schedule {
     }
 }
 
-class SessionDetails {
+struct SessionDetails {
 /* {"Audience":"Architect, IT Implementer","Topic":"Usage & Adoption"
 ,"Theme":"Security & Compliance","Product":"Windows Client (Desktop & Mobile)","Level":"Level 300"} */
-    var audience = ""
-    var topic = ""
-    var theme = ""
-    var product = ""
-    var level = ""
+    let audience:String
+    let topic:String
+    let theme:String
+    let product:String
+    let level:String
     
-    required init () { }
+    init () {
+        self.init(dictionary:[String:AnyObject]())
+    }
     
     init(dictionary:[String:AnyObject]) {
         audience = dictionary["Audience"] as? String ?? ""
@@ -244,42 +261,50 @@ class Session {
     "EvaluationUrl":null}
 */
 
-    var eventSessionId = 0
-    var eventSessionRegistrationId = 0
-    var sessionId = 0
-    var name = ""
-    var speakers = [Speaker]()
-    var schedule = Schedule()
-    var description = ""
-    var details = SessionDetails()
-    var isCommonSession = false
+    let eventSessionId:Int
+    let eventSessionRegistrationId:Int
+    let sessionId:Int
+    let name:String
+    let speakers:[Speaker]
+    let schedule:Schedule
+    let description:String
+    let details:SessionDetails
+    let isCommonSession = false
     
-    required init() { }
+    convenience init() {
+        self.init(dictionary:[String:AnyObject]())
+    }
     
-    init(dictionary:[String:AnyObject]) {
+    required init(dictionary:[String:AnyObject]) {
         eventSessionId = dictionary["EventSessionId"] as? Int ?? 0
         eventSessionRegistrationId = dictionary["EventSessionRegistrationId"] as? Int ?? 0
         sessionId = dictionary["SessionId"] as? Int ?? 0
         name = dictionary["Name"] as? String ?? ""
         if let x = dictionary["Speakers"] as? [[String:AnyObject]] {
-            self.speakers = x.map{ Speaker(dictionary:$0) }
+            speakers = x.map{ Speaker(dictionary:$0) }
+        } else {
+            speakers = [Speaker]()
         }
         if let x = dictionary["Schedule"] as? [String:AnyObject] {
-            self.schedule = Schedule(dictionary: x)
+            schedule = Schedule(dictionary: x)
+        } else {
+            schedule = Schedule()
         }
         description = dictionary["Description"] as? String ?? ""
         if let x = dictionary["Details"] as? [String:AnyObject] {
-            self.details = SessionDetails(dictionary: x)
+            details = SessionDetails(dictionary: x)
+        } else {
+            details = SessionDetails()
         }
     }
 }
 
 class GetSessionsResponse {
 /*    {"PageNumber":1,"PagesCount":6,"RegistrationId":0,"Sessions":[Session] */
-    var pageNumber = 0
-    var pagesCount = 0
-    var registrationId = 0
-    var sessions = [Session]()
+    let pageNumber:Int
+    let pagesCount:Int
+    let registrationId:Int
+    let sessions:[Session]
     
     init(dictionary:[String:AnyObject]) {
         pageNumber = dictionary["PageNumber"] as? Int ?? 0
@@ -288,6 +313,8 @@ class GetSessionsResponse {
 
         if let sd = dictionary["Sessions"] as? [[String:AnyObject]] {
             sessions = sd.map{ Session(dictionary: $0) }
+        } else {
+            sessions = [Session]()
         }
     }
 }
