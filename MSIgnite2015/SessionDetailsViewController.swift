@@ -19,8 +19,9 @@
 // THE SOFTWARE.
 
 import UIKit
+import SafariServices
 
-class SessionDetailsViewController: UITableViewController {
+class SessionDetailsViewController: UITableViewController, SFSafariViewControllerDelegate {
     
     var session = Session()
     
@@ -41,16 +42,25 @@ class SessionDetailsViewController: UITableViewController {
     }
     
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCellWithIdentifier("cell") as? SessionDetailsCell else {
-            fatalError("can't find cell in storyboard")
+        var titleCell:SessionTitleCell!
+        var cell:SessionDetailsCell!
+        if(indexPath.row == 0) {
+            titleCell = tableView.dequeueReusableCellWithIdentifier("titleCell") as? SessionTitleCell
+            if(titleCell == nil) {
+                fatalError("can't find titleCell in storyboard")
+            }
+        } else {
+            cell = tableView.dequeueReusableCellWithIdentifier("cell") as? SessionDetailsCell
+            if(cell == nil) {
+                fatalError("can't find cell in storyboard")
+            }
+            cell.label.font = UIFont.preferredFontForTextStyle(UIFontTextStyleBody)
         }
-        
-        cell.label.font = UIFont.preferredFontForTextStyle(UIFontTextStyleBody)
         
         switch(indexPath.row) {
         case 0:
-            cell.label.text = session.name
-            cell.label.font = UIFont.preferredFontForTextStyle(UIFontTextStyleHeadline)
+            titleCell.label.text = session.name
+            return titleCell
         case 1:
             cell.label.text = session.details.level
         case 2:
@@ -71,6 +81,26 @@ class SessionDetailsViewController: UITableViewController {
         
         return cell
     }
+    
+    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        if(indexPath.row == 0) {
+            if let url = NSURL(string: "https://msignite.nz/sessions/session-details/\(session.sessionId)") {
+                let vc = SFSafariViewController(URL:url)
+                vc.delegate = self
+                navigationController!.presentViewController(vc, animated: true, completion: nil)
+            }
+        }
+        tableView.deselectRowAtIndexPath(indexPath, animated: true)
+    }
+    
+    func safariViewControllerDidFinish(controller: SFSafariViewController) {
+        navigationController!.dismissViewControllerAnimated(true, completion: nil)
+    }
+}
+
+class SessionTitleCell : UITableViewCell {
+    
+    @IBOutlet weak var label: UILabel!
 }
 
 class SessionDetailsCell : UITableViewCell {

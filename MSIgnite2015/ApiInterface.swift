@@ -196,13 +196,16 @@ struct Schedule {
 
     
     static let formatter = NSDateFormatter()
+    static let formatterMs = NSDateFormatter()
+    
     static var onceToken:dispatch_once_t = 0
     
     static func parseDate(dateString:String) -> NSDate? {
         dispatch_once(&onceToken) {
             formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+            formatterMs.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.S"
         }
-        return formatter.dateFromString(dateString)
+        return formatterMs.dateFromString(dateString) ?? formatter.dateFromString(dateString)
     }
     
     init () {
