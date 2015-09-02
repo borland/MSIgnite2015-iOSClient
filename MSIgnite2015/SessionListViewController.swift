@@ -66,7 +66,7 @@ class SessionListViewController : UITableViewController {
         callback = { [weak self] (response:GetSessionsResponse) -> () in
             guard let sself = self else { return }
             
-            // the ignite api is RIDICULOUS. 
+            // the ignite api is weird.
             // When you ask for page 1, it returns items [0-10]
             // When you ask for page 2, it returns items [0-20]... Yes that's right, NOT articles 11-20 as you'd expect
             sself._sessions.removeAll()
@@ -95,7 +95,7 @@ class SessionListViewController : UITableViewController {
             
             // either stop the spinner or get the next request
             if response.pageNumber < response.pagesCount {
-                // because of the RIDICULOUS paging, we can simply request the last page once we know how many in total there are
+                // because of the strange paging the API has, we can simply request the last page once we know how many in total there are
                 AppDelegate.api.cachedGetSessions(dayId, pageNumber:response.pagesCount, clearCache:clearCache, callback:callback)
             } else { // all done
                 spinner.stopAnimating()
